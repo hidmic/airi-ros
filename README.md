@@ -1,2 +1,3 @@
 # airi-ros
-Stack de ROS para AIRI
+
+Este repositorio comprende todos los paquetes de ROS necesarios para que AIRI opere.
