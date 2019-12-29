@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot name="airi" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:property name="timing_belt_drive_torque" value="0.6664"/>
+  <xacro:property name="timing_belt_drive_acceleration" value="0.25"/>
+
+  <xacro:macro name="timing-belt-drive" params="drives">
+    <transmission name="${drives}_drive">
+      <joint name="${drives}">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${drives}_drive_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+  <xacro:property name="dc_motor_mass" value="0.270"/>
+  <xacro:property name="dc_motor_length" value="0.1005"/>
+  <xacro:property name="dc_motor_radius" value="0.0185"/>
+
+  <xacro:macro name="dc-motor" params="name">
+    <link name="${name}_link">
+      <inertial>
+        <mass value="${dc_motor_mass}"/>
+        <xacro:cylinder_inertia mass="${dc_motor_mass}"
+                                radius="${dc_motor_radius}"
+                                length="${dc_motor_length}"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 ${-dc_motor_length/2}"/>
+        <geometry>
+          <mesh filename="package://airi_description/media/parts/dc_motor.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+      </visual>
+    </link>
+  </xacro:macro>
+</robot>

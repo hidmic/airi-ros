@@ -1,0 +1,21 @@
+<launch>
+  <arg name="world_file" default="$(find airi_gazebo)/worlds/willow.world"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="use_sim_time" value="true"/>
+    <arg name="debug" value="false"/>
+    <arg name="verbose" value="true"/>
+    <arg name="gui" value="true" />
+    <arg name="world_name" value="$(arg world_file)"/>
+  </include>
+
+  <arg name="urdf_file" default="$(find airi_description)/urdf/airi.urdf.xacro"/>
+  <param name="robot_description" command="$(find xacro)/xacro '$(arg urdf_file)'"/>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+    <param name="publish_frequency" type="double" value="50.0" />
+  </node>
+
+  <node name="spawn_airi_model" pkg="gazebo_ros" type="spawn_model"
+        args="-unpause -urdf -param robot_description -model airi"/>
+</launch>

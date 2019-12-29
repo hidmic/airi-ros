@@ -1,0 +1,41 @@
+material AIRI/Steel {
+    technique {
+        pass {
+            ambient 0.875 0.87109375 0.85546875 1.0
+            diffuse 0.875 0.87109375 0.85546875 1.0
+            specular 0.9 0.9 0.9 10000.0
+        }
+    }
+}
+
+material AIRI/Rubber {
+    technique {
+        pass {
+            ambient 0.1484375 0.1484375 0.1484375 1.0
+            diffuse 0.1484375 0.1484375 0.1484375 1.0
+        }
+    }
+}
+
+material AIRI/Thermoplastic {
+    technique {
+        pass {
+            ambient 0.2578125 0.2578125 0.2578125 1.0
+            diffuse 0.2578125 0.2578125 0.2578125 1.0
+        }
+    }
+}
+
+material AIRI/Acrylic {
+    technique {
+        pass {
+            scene_blend alpha_blend
+            depth_write off
+       
+            texture_unit {
+                colour_op_ex source1 src_manual src_current 0.97265625 0.97265625 0.97265625
+                alpha_op_ex source1 src_manual src_current 0.5
+            }
+        }
+    }
+}
