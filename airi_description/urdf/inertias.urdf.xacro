@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot name="inertias" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="cylinder_inertia" params="mass radius length">
+    <inertia ixx="${mass * (3 * radius**2 + length**2)/12}" ixy="0.0"
+             ixz="0.0" iyy="${mass * (3 * radius**2 + length**2)/12}"
+             iyz="0.0" izz="${mass/2 * radius**2}"/>
+  </xacro:macro>
+
+  <xacro:macro name="sphere_inertia" params="mass radius">
+    <inertia ixx="${2 / 5 * mass * radius**2}" ixy="0.0"
+             ixz="0.0" iyy="${2 / 5 * mass * radius**2}"
+             iyz="0.0" izz="${2 / 5 * mass * radius**2}"/>
+  </xacro:macro>
+</robot>

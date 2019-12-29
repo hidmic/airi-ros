@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<robot name="airi" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find airi_description)/urdf/constants.urdf.xacro"/>
+  <xacro:include filename="$(find airi_description)/urdf/inertias.urdf.xacro"/>
+  <xacro:include filename="$(find airi_description)/urdf/materials.urdf.xacro"/>
+
+  <xacro:include filename="$(find airi_description)/urdf/parts.urdf.xacro"/>
+  <xacro:include filename="$(find airi_description)/urdf/sensors.urdf.xacro"/>
+  <xacro:include filename="$(find airi_description)/urdf/actuators.urdf.xacro"/>
+  
+  <xacro:chassis name="base" load="6.0"/>
+
+  <!-- <xacro:bumper name="bumper"/> -->
+  <!-- <xacro:fastener on="base" bears="bumper"> -->
+  <!--   <origin xyz="0 0 ${-chassis_thickness}"/> -->
+  <!-- </xacro:fastener> -->
+
+  <!-- <xacro:large-ball-caster name="rear_caster"/> -->
+  <!-- <xacro:fastener on="base" bears="rear_caster"> -->
+  <!--   <origin xyz="${rear_caster_opening_xyz}" rpy="0 0 ${PI/2}"/> -->
+  <!-- </xacro:fastener>  -->
+
+  <!-- <xacro:small-ball-caster name="front_caster"/> -->
+  <!-- <xacro:fastener on="base" bears="front_caster"> -->
+  <!--   <origin xyz="${front_caster_opening_xyz}"/> -->
+  <!-- </xacro:fastener> -->
+
+  <!-- <xacro:gy521-imu name="imu"/> -->
+  <!-- <xacro:fastener on="base" bears="imu"> -->
+  <!--   <origin xyz="0 0 0"/> -->
+  <!-- </xacro:fastener> -->
+
+  <!-- <xacro:rplidar-a1m8r1 name="laser"/> -->
+  <!-- <xacro:fastener on="base" bears="laser"> -->
+  <!--   <origin xyz="0 0 0.067"/> -->
+  <!-- </xacro:fastener> -->
+
+  <!-- <xacro:ky033-ranger name="left_cliff_sensor"/> -->
+  <!-- <xacro:fastener on="base" bears="left_cliff_sensor"> -->
+  <!--   <origin xyz="${left_cliff_sensor_xyz}" -->
+  <!--           rpy="${left_cliff_sensor_rpy}"/> -->
+  <!-- </xacro:fastener> -->
+
+  <!-- <xacro:ky033-ranger name="right_cliff_sensor"/> -->
+  <!-- <xacro:fastener on="base" bears="right_cliff_sensor"> -->
+  <!--    <origin xyz="${right_cliff_sensor_xyz}" -->
+  <!--            rpy="${right_cliff_sensor_rpy}"/> -->
+  <!-- </xacro:fastener> -->
+
+  <!-- <xacro:hcsr04-sonar name="front_sonar"/> -->
+  <!-- <xacro:fastener on="base" bears="front_sonar"> -->
+  <!--   <origin xyz="${front_sonar_xyz}"  -->
+  <!--           rpy="${front_sonar_rpy}"/>  -->
+  <!-- </xacro:fastener> -->
+
+  <!-- <xacro:hcsr04-sonar name="right_sonar"/> -->
+  <!-- <xacro:fastener on="base" bears="right_sonar"> -->
+  <!--   <origin xyz="${right_sonar_xyz}"  -->
+  <!--           rpy="${right_sonar_rpy}"/> -->
+  <!-- </xacro:fastener> -->
+
+  <!-- <xacro:hcsr04-sonar name="left_sonar"/> -->
+  <!-- <xacro:fastener on="base" bears="left_sonar"> -->
+  <!--   <origin xyz="${left_sonar_xyz}"  -->
+  <!--           rpy="${left_sonar_rpy}"/> -->
+  <!-- </xacro:fastener>  -->
+
+  <xacro:rubber-wheel name="left_wheel">
+    <origin rpy="${PI} 0 0"/>
+  </xacro:rubber-wheel>
+
+  <xacro:shaft on="base" bears="left_wheel">
+    <origin xyz="0 ${wheel_base/2} ${wheel_z_offset}" rpy="${-PI/2} 0 0"/>
+    <axis xyz="0 0 1"/>
+  </xacro:shaft>
+  <xacro:timing-belt-drive drives="left_wheel_shaft"/>
+
+  <xacro:rubber-wheel name="right_wheel">
+    <origin rpy="0 0 0"/>
+  </xacro:rubber-wheel>
+  <xacro:shaft on="base" bears="right_wheel">
+    <origin xyz="0 ${-wheel_base/2} ${wheel_z_offset}" rpy="${-PI/2} 0 0"/>
+    <axis xyz="0 0 1"/>
+  </xacro:shaft>
+
+  <xacro:timing-belt-drive drives="right_wheel_shaft"/>
+
+  <!-- <gazebo> -->
+  <!--   <plugin name="base_controller" filename="libgazebo_ros_diff_drive.so"> -->
+  <!--     <wheelSeparation>${wheel_base}</wheelSeparation> -->
+  <!--     <wheelDiameter>${rubber_wheel_diameter}</wheelDiameter> -->
+  <!--     <wheelTorque>${timing_belt_drive_torque}</wheelTorque> -->
+  <!--   </plugin> -->
+  <!-- </gazebo> -->
+</robot>

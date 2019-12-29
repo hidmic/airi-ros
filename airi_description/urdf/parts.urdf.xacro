@@ -1,0 +1,356 @@
+<?xml version="1.0"?>
+<robot name="parts" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="wheel_base" value="0.242"/>
+  <xacro:property name="wheel_z_offset" value="0.026"/>
+  <xacro:property name="sonar_elevation_angle" value="${-15.0 * PI / 180.0}"/>
+  <xacro:property name="sonar_r_offset" value="${0.004 * cos(-sonar_elevation_angle) + 0.170}"/>
+  <xacro:property name="sonar_z_offset" value="${0.004 * sin(-sonar_elevation_angle) + 0.0567354}"/>
+  <xacro:property name="left_sonar_yaw" value="${40.0 * PI / 180.0}"/>
+  <xacro:property name="left_sonar_xyz" value="${sonar_r_offset * cos(left_sonar_yaw)}
+                                                        ${sonar_r_offset * sin(left_sonar_yaw)}
+                                                        ${sonar_z_offset}"/>
+  <xacro:property name="left_sonar_rpy" value="0 ${sonar_elevation_angle} ${left_sonar_yaw}"/>
+  <xacro:property name="right_sonar_yaw" value="${-40.0 * PI / 180.0}"/>
+  <xacro:property name="right_sonar_xyz" value="${sonar_r_offset * cos(right_sonar_yaw)}
+                                                        ${sonar_r_offset * sin(right_sonar_yaw)}
+                                                        ${sonar_z_offset}"/>
+  <xacro:property name="right_sonar_rpy" value="0 ${sonar_elevation_angle} ${right_sonar_yaw}"/>
+  <xacro:property name="front_sonar_xyz" value="${sonar_r_offset} 0 ${sonar_z_offset}"/>
+  <xacro:property name="front_sonar_rpy" value="0 ${sonar_elevation_angle} 0"/>
+  <xacro:property name="rear_caster_opening_xyz" value="-0.1342 0 0"/>
+  <xacro:property name="front_caster_opening_xyz" value="0.170 0 0"/>
+  <xacro:property name="cliff_sensor_x_offset" value="0.006"/>
+  <xacro:property name="cliff_sensor_r_offset" value="0.18891"/>
+  <xacro:property name="left_cliff_sensor_yaw" value="${40.0 * PI / 180.0}"/>
+  <xacro:property name="left_cliff_sensor_xyz" value="${cliff_sensor_r_offset * cos(left_cliff_sensor_yaw) - cliff_sensor_x_offset}
+                                                      ${cliff_sensor_r_offset * sin(left_cliff_sensor_yaw)} 0"/>
+  <xacro:property name="left_cliff_sensor_rpy" value="0 ${PI/2} ${left_cliff_sensor_yaw}"/>
+  <xacro:property name="right_cliff_sensor_yaw" value="${-40.0 * PI / 180.0}"/>
+  <xacro:property name="right_cliff_sensor_xyz" value="${cliff_sensor_r_offset * cos(right_cliff_sensor_yaw) - cliff_sensor_x_offset}
+                                                       ${cliff_sensor_r_offset * sin(right_cliff_sensor_yaw)} 0"/>
+  <xacro:property name="right_cliff_sensor_rpy" value="0 ${PI/2} ${right_cliff_sensor_yaw}"/>
+  <xacro:property name="chassis_z_offset" value="0.020"/>
+  <xacro:property name="chassis_thickness" value="0.002"/>
+  <xacro:property name="chassis_diameter" value="0.400"/>
+  <xacro:property name="chassis_height" value="0.133"/>
+  <xacro:property name="chassis_base_height" value="0.1095"/>
+  <xacro:property name="chassis_bay_height" value="0.008"/>
+  <xacro:property name="chassis_cover_height" value="0.0155"/>
+
+  <xacro:macro name="chassis" params="name load">
+    <link name="${name}_footprint"/>
+
+    <joint name="footprint_to_base" type="fixed">
+      <parent link="${name}_footprint"/>
+      <child link="${name}_link"/>
+      <origin xyz="0 0 ${chassis_z_offset + chassis_thickness}"/>
+    </joint>
+
+    <link name="${name}_link">
+      <inertial>
+        <origin xyz="0 0 ${chassis_height / 2}"/>
+        <mass value="${load}"/>
+        <xacro:cylinder_inertia
+            mass="${load}"
+            radius="${chassis_diameter / 2}"
+            length="${chassis_height}"/>
+      </inertial>
+      <collision>
+        <origin xyz="0 0 ${chassis_base_height / 2}"/>
+        <geometry>
+          <cylinder radius="${chassis_diameter / 2 - 0.001}" length="${chassis_base_height}"/>
+        </geometry>
+      </collision>
+      <visual>
+        <origin xyz="0 0 ${-chassis_z_offset - chassis_thickness}"/>
+        <geometry>
+          <mesh filename="package://airi_description/media/parts/base_chassis.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="thermoplastic"/>
+      </visual>
+    </link>
+    <gazebo name="${name}_link">
+      <visual>
+        <material>
+          <script>
+            <uri>package://airi_description/media/materials/scripts/airi.material</uri>
+            <name>AIRI/Thermoplastic</name>
+          </script>
+        </material>
+      </visual>
+    </gazebo>
+
+    <!-- <link name="${name}_bay"> -->
+    <!--   <visual> -->
+    <!--     <origin xyz="0 0 ${-chassis_z_offset - chassis_thickness}"/> -->
+    <!--     <geometry> -->
+    <!--       <mesh filename="package://airi_description/media/parts/chassis_bay.stl" -->
+    <!--             scale="0.001 0.001 0.001"/> -->
+    <!--     </geometry> -->
+    <!--     <material name="acrylic"/> -->
+    <!--   </visual> -->
+    <!-- </link> -->
+    <!-- <gazebo name="${name}_bay"> -->
+    <!--   <material>AIRI/Acrylic</material> -->
+    <!-- </gazebo> -->
+    <!-- <joint name="${name}_bay_fastener" type="fixed"> -->
+    <!--   <parent link="${name}_link"/> -->
+    <!--   <child link="${name}_bay"/> -->
+    <!-- </joint> -->
+
+    <!-- <link name="${name}_cover"> -->
+    <!--   <collision> -->
+    <!--     <origin xyz="0 0 ${chassis_cover_height/2 + chassis_base_height + chassis_bay_height}"/> -->
+    <!--     <geometry> -->
+    <!--       <cylinder radius="${chassis_diameter / 2}" length="${chassis_cover_height}"/> -->
+    <!--     </geometry> -->
+    <!--   </collision> -->
+    <!--   <visual> -->
+    <!--     <origin xyz="0 0 ${-chassis_z_offset - chassis_thickness}"/> -->
+    <!--     <geometry> -->
+    <!--       <mesh filename="package://airi_description/media/parts/chassis_cover.stl" -->
+    <!--             scale="0.001 0.001 0.001"/> -->
+    <!--     </geometry> -->
+    <!--     <material name="thermoplastic"/> -->
+    <!--   </visual> -->
+    <!-- </link> -->
+    <!-- <gazebo name="${name}_cover"> -->
+    <!--   <visual> -->
+    <!--     <material> -->
+    <!--       <script> -->
+    <!--         <uri>package://airi_description/media/materials/scripts/airi.material</uri> -->
+    <!--         <name>AIRI/Thermoplastic</name> -->
+    <!--       </script> -->
+    <!--     </material> -->
+    <!--   </visual> -->
+    <!-- </gazebo> -->
+    <!-- <joint name="${name}_cover_fastener" type="fixed"> -->
+    <!--   <parent link="${name}_link"/> -->
+    <!--   <child link="${name}_cover"/> -->
+    <!-- </joint> -->
+  </xacro:macro>
+  
+  <xacro:property name="rubber_wheel_diameter" value="0.096"/>
+  <xacro:property name="rubber_wheel_width" value="0.032"/>
+  <xacro:property name="rubber_wheel_mass" value="0.142"/>
+  <xacro:macro name="rubber-wheel" params="name *origin">
+    <link name="${name}_link">
+      <inertial>
+        <xacro:insert_block name="origin"/>
+        <mass value="${rubber_wheel_mass}"/>
+        <xacro:cylinder_inertia mass="${rubber_wheel_mass}"
+                                radius="${rubber_wheel_diameter / 2}"
+                                length="${rubber_wheel_width}"/>
+      </inertial>
+      <collision>
+        <xacro:insert_block name="origin"/>
+        <geometry>
+          <cylinder radius="${rubber_wheel_diameter / 2}"
+                    length="${rubber_wheel_width}"/>
+        </geometry>
+      </collision>
+      <visual>
+        <xacro:insert_block name="origin"/>
+        <geometry>
+          <mesh filename="package://airi_description/media/parts/rubber_wheel.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="rubber"/>
+      </visual>
+    </link>
+    <gazebo reference="${name}_link">
+      <visual>
+        <material>
+          <script>
+            <uri>package://airi_description/media/materials/scripts/airi.material</uri>
+            <name>AIRI/Rubber</name>
+          </script>
+        </material>
+      </visual>
+      <mu1>0.9</mu1>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="shaft" params="on bears *origin *axis">
+    <joint name="${bears}_shaft" type="continuous">
+      <parent link="${on}_link" />
+      <child link="${bears}_link" />
+      <xacro:insert_block name="origin"/>
+      <xacro:insert_block name="axis"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="fastener" params="on bears *origin">
+    <joint name="${bears}_fastener" type="fixed">
+      <parent link="${on}_link" />
+      <child link="${bears}_link" />
+      <xacro:insert_block name="origin"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="large-ball-caster" params="name">
+    <xacro:property name="ball_mass" value="0.5"/>
+    <xacro:property name="ball_radius" value="0.0254"/>
+
+    <link name="${name}_link">
+      <visual name="support">
+        <geometry>
+          <mesh filename="package://airi_description/media/parts/50mm_ball_caster.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="thermoplastic"/>
+      </visual>
+    </link>
+    <gazebo reference="${name}_link">
+      <visual>
+        <material>
+          <script>
+            <uri>package://airi_description/media/materials/scripts/airi.material</uri>
+            <name>AIRI/Thermoplastic</name>
+          </script>
+        </material>
+      </visual>
+    </gazebo>
+
+    <link name="${name}_ball">
+      <inertial>
+        <mass value="${ball_mass}"/>
+        <xacro:sphere_inertia mass="${ball_mass}" radius="${ball_radius}"/>
+      </inertial>
+      <collision>
+        <geometry>
+          <sphere radius="${ball_radius}"/>
+        </geometry>
+      </collision>
+      <visual>
+        <geometry>
+          <sphere radius="${ball_radius}"/>
+        </geometry>
+        <material name="steel"/>
+      </visual>
+    </link>
+    <gazebo reference="${name}_ball">
+      <visual>
+        <material>
+          <script>
+            <uri>package://airi_description/media/materials/scripts/airi.material</uri>
+            <name>AIRI/Steel</name>
+          </script>
+        </material>
+      </visual>
+      <mu1>0</mu1>
+    </gazebo>
+
+    <joint name="${name}_ball_holder" type="fixed">
+      <parent link="${name}_link"/>
+      <child link="${name}_ball"/>
+      <origin xyz="0 0 ${ball_radius - chassis_z_offset - chassis_thickness}"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="small-ball-caster" params="name">
+    <xacro:property name="ball_mass" value="0.05"/>
+    <xacro:property name="ball_radius" value="0.005"/>
+
+    <link name="${name}_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://airi_description/media/parts/10mm_ball_caster.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="thermoplastic"/>
+      </visual>
+    </link>
+    <gazebo reference="${name}_link">
+      <visual>
+        <material>
+          <script>
+            <uri>package://airi_description/media/materials/scripts/airi.material</uri>
+            <name>AIRI/Thermoplastic</name>
+          </script>
+        </material>
+      </visual>
+    </gazebo>
+
+    <link name="${name}_ball">
+      <inertial>
+        <mass value="${ball_mass}"/>
+        <xacro:sphere_inertia mass="${ball_mass}" radius="${ball_radius}"/>
+      </inertial>
+      <collision>
+        <geometry>
+          <sphere radius="${ball_radius}"/>
+        </geometry>
+      </collision>
+      <visual>
+        <geometry>
+          <sphere radius="${ball_radius}"/>
+        </geometry>
+        <material name="steel"/>
+      </visual>
+    </link>
+    <gazebo reference="${name}_ball">
+      <visual>
+        <material>
+          <script>
+            <uri>package://airi_description/media/materials/scripts/airi.material</uri>
+            <name>AIRI/Steel</name>
+          </script>
+        </material>
+      </visual>
+      <mu1>0</mu1>
+    </gazebo>
+
+    <joint name="${name}_ball_holder" type="fixed">
+      <parent link="${name}_link"/>
+      <child link="${name}_ball"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="bumper" params="name">
+    <link name="${name}_link">
+      <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.0015476068974213215" 
+                 ixy="0.0" ixz="-6.444845362971657e-09" 
+                 iyy="0.0002501683692319241" iyz="0.0"
+                 izz="0.0016116796150935037"/>
+      </inertial>
+      <collision>
+        <geometry>
+          <mesh filename="package://airi_description/media/parts/bumper.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <visual>
+        <geometry>
+          <mesh filename="package://airi_description/media/parts/bumper.stl"
+                scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="thermoplastic"/>
+      </visual>
+    </link>
+    <gazebo reference="${name}_link">
+      <visual>
+        <material>
+          <script>
+            <uri>package://airi_description/media/materials/scripts/airi.material</uri>
+            <name>AIRI/Thermoplastic</name>
+          </script>
+        </material>
+      </visual>
+      <sensor type="contact" name="${name}">
+        <pose>0 0 0 0 0 0</pose>
+        <visualize>false</visualize>
+        <update_rate>10</update_rate>
+        <plugin name="${name}_controller" filename="libairi_bumper_plugin.so">
+          <topicName>/${name}</topicName>
+          <frameName>${name}_link</frameName>
+        </plugin>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+</robot>
