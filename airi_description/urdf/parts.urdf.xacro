@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot name="parts" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:property name="wheel_base" value="0.242"/>
+  <xacro:property name="board_support_z_offset" value="0.067"/>
   <xacro:property name="sonar_elevation_angle" value="${-15.0 * PI / 180.0}"/>
   <xacro:property name="sonar_r_offset" value="${0.004 * cos(-sonar_elevation_angle) + 0.170}"/>
   <xacro:property name="sonar_z_offset" value="${0.004 * sin(-sonar_elevation_angle) + 0.0567354}"/>
