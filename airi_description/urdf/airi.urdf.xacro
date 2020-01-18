@@ -39,7 +39,7 @@
     <origin xyz="0 0 ${board_support_z_offset}"/>
   </xacro:fastener>
 
-  <xacro:rplidar-a1m8r1 name="laser"/>
+  <xacro:rplidar-a1m8r1 name="laser" topic="scan"/>
   <xacro:fastener on="base" bears="laser">
     <origin xyz="0 0 ${board_support_z_offset}"/>
   </xacro:fastener>

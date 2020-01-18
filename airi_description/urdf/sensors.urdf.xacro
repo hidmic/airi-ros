@@ -4,7 +4,7 @@
   <xacro:property name="rplidar_a1m8r1_diameter" value="0.070"/>
   <xacro:property name="rplidar_a1m8r1_length" value="0.0245"/>
 
-  <xacro:macro name="rplidar-a1m8r1" params="name">
+  <xacro:macro name="rplidar-a1m8r1" params="name topic">
     <link name="${name}_link">
       <inertial>
         <origin xyz="0 0 0.04175"/>
@@ -56,10 +56,11 @@
           </noise>
         </ray>
         <plugin name="${name}_controller" filename="libgazebo_ros_laser.so">
-          <topicName>${name}</topicName>
+          <topicName>${topic}</topicName>
           <frameName>${name}_optical_link</frameName>
         </plugin>
       </sensor>
+      <self_collide>1</self_collide>
     </gazebo>
   </xacro:macro>
 
@@ -121,6 +122,7 @@
           <fov>${2 * 15.0 * PI / 180.0}</fov>
         </plugin>
       </sensor>
+      <self_collide>1</self_collide>
     </gazebo>
   </xacro:macro>
 
@@ -182,6 +184,7 @@
           <fov>${2 * 8.0 * PI / 180.0}</fov>
         </plugin>
       </sensor>
+      <self_collide>1</self_collide>
     </gazebo>
   </xacro:macro>
 
@@ -219,6 +222,7 @@
           <gaussianNoise>0.005</gaussianNoise>
         </plugin>
       </sensor>
+      <self_collide>1</self_collide>
     </gazebo>
   </xacro:macro>
 

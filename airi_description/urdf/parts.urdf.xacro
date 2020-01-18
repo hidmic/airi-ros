@@ -90,7 +90,7 @@
           </script>
         </material>
       </visual>
-      <selfCollide>true</selfCollide>
+      <self_collide>1</self_collide>
     </gazebo>
 
     <link name="${name}_bay">
@@ -112,7 +112,7 @@
           </script>
         </material>
       </visual>
-      <selfCollide>true</selfCollide>
+      <self_collide>1</self_collide>
     </gazebo> 
     <joint name="${name}_bay_fastener" type="fixed"> 
       <parent link="${name}_link"/> 
@@ -152,7 +152,7 @@
           </script> 
         </material> 
       </visual> 
-      <selfCollide>true</selfCollide>
+      <self_collide>1</self_collide>
     </gazebo>
     <joint name="${name}_cover_fastener" type="fixed"> 
       <parent link="${name}_link"/> 
@@ -210,7 +210,7 @@
           </friction>
           <contact>
             <ode>
-              <kp>1.0e6</kp>
+              <kp>1.0e8</kp>
               <kd>1.0</kd>
               <max_vel>0.0</max_vel>
               <min_depth>0.0005</min_depth>
@@ -265,6 +265,7 @@
           </script>
         </material>
       </visual>
+      <self_collide>1</self_collide>
     </gazebo>
 
     <link name="${name}_ball">
@@ -304,15 +305,16 @@
           </friction>
           <contact>
             <ode>
-              <kp>1.0e6</kp>
+              <kp>1.0e8</kp>
               <kd>1.0</kd>
               <max_vel>0.0</max_vel>
-              <min_depth>0.0005</min_depth>
+              <min_depth>0.0</min_depth>
             </ode>
           </contact>
         </surface>
         <max_contacts>1</max_contacts>
       </collision>
+      <self_collide>1</self_collide>
     </gazebo>
 
     <joint name="${name}_ball_holder" type="fixed">
@@ -347,16 +349,7 @@
     </gazebo>
 
     <link name="${name}_ball">
-      <inertial>
-        <mass value="${ball_mass}"/>
-        <xacro:sphere_inertia mass="${ball_mass}" radius="${ball_radius}"/>
-      </inertial>
-      <collision>
-        <geometry>
-          <sphere radius="${ball_radius}"/>
-        </geometry>
-      </collision>
-      <visual>
+       <visual>
         <geometry>
           <sphere radius="${ball_radius}"/>
         </geometry>
@@ -372,26 +365,6 @@
           </script>
         </material>
       </visual>
-      <collision>
-        <surface>
-          <friction>
-            <ode>
-              <mu>0.001</mu>
-              <mu2>0.001</mu2>
-              <fdir1>1 0 0</fdir1>
-            </ode>
-          </friction>
-          <contact>
-            <ode>
-              <kp>1.0e6</kp>
-              <kd>1.0</kd>
-              <max_vel>0.0</max_vel>
-              <min_depth>0.0005</min_depth>
-            </ode>
-          </contact>
-        </surface>
-        <max_contacts>1</max_contacts>
-      </collision>
     </gazebo>
 
     <joint name="${name}_ball_holder" type="fixed">
@@ -414,17 +387,10 @@
                  iyy="0.0002501683692319241" iyz="0.0"
                  izz="0.0016116796150935037"/>
       </inertial>
-      <collision name="left_patch">
-        <origin xyz="0 0 ${-bumper_height/2 - bumper_z_offset}"/>
+      <collision name="main">
+        <origin xyz="0 0 ${-bumper_height/2 - bumper_z_offset - chassis_z_offset}"/>
         <geometry>
-          <mesh filename="package://airi_description/media/parts/left_bumper_patch.stl"
-                scale="0.001 0.001 0.001"/>
-        </geometry>
-      </collision>
-      <collision name="right_patch">
-        <origin xyz="0 0 ${-bumper_height/2 - bumper_z_offset}"/>
-        <geometry>
-          <mesh filename="package://airi_description/media/parts/right_bumper_patch.stl"
+          <mesh filename="package://airi_description/media/parts/bumper.stl"
                 scale="0.001 0.001 0.001"/>
         </geometry>
       </collision>
@@ -446,15 +412,15 @@
           </script>
         </material>
       </visual>
-      <self_collide>true</self_collide>
+      <self_collide>1</self_collide>
+
       <sensor type="contact" name="${name}">
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
         <update_rate>10</update_rate>
         <contact>
-          <!-- Use collision names as it results from URDF to SDF conversion-->
-          <collision>bumper_link_fixed_joint_lump__left_patch_collision</collision>
-          <collision>bumper_link_fixed_joint_lump__right_patch_collision_1</collision>
+          <!-- Use collision names as it results from URDF to SDF conversion -->
+          <collision>bumper_link_fixed_joint_lump__main_collision</collision>
         </contact>
         <plugin name="${name}_controller" filename="libairi_bumper_plugin.so">
           <topic>${name}/collisions</topic>
@@ -463,6 +429,7 @@
           <sample_grid>0.08 0.08 0.08</sample_grid>
         </plugin>
       </sensor>
+
     </gazebo>
   </xacro:macro>
 
@@ -488,5 +455,8 @@
         </geometry>
       </visual>
     </link>
+    <gazebo reference="${name}_link">
+      <self_collide>1</self_collide>
+    </gazebo>
   </xacro:macro>
 </robot>
