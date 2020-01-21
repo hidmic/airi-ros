@@ -1,0 +1,10 @@
+<launch>
+  <arg name="debug" default="false"/>
+
+  <include file="$(find airi_nav)/launch/move.launch"/>
+
+  <node pkg="explore_lite" type="explore" name="explorer" output="screen">
+    <rosparam file="$(find airi_nav)/config/explorer_params.yaml" command="load"/>
+    <param name="visualize" value="$(arg debug)"/>
+  </node>
+</launch>

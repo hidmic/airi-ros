@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>airi_nav</name>
+  <version>0.1.0</version>
+  <description>Navigation stack for AIRI</description>
+
+  <maintainer email="hid.michel@gmail.com">Michel Hidalgo</maintainer>
+  <license>Apache License 2</license>
+
+  <author email="hid.michel@gmail.com">Michel Hidalgo</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>base_local_planner</exec_depend>
+  <exec_depend>costmap_2d</exec_depend>
+  <exec_depend>explore_lite</exec_depend>
+  <exec_depend>move_base</exec_depend>
+  <exec_depend>navfn</exec_depend>
+  <exec_depend>range_sensor_layer</exec_depend>
+  <exec_depend>rotate_recovery</exec_depend>
+
+  <exec_depend>roslaunch</exec_depend>
+
+  <export>
+  </export>
+</package>
