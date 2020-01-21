@@ -427,6 +427,7 @@
           <displacement_axis>1 0 0</displacement_axis>
           <contact_offset>0.02</contact_offset>
           <sample_grid>0.08 0.08 0.08</sample_grid>
+          <version>1</version>
         </plugin>
       </sensor>
 

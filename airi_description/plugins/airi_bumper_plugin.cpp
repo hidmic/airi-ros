@@ -45,8 +45,10 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/point_cloud_conversion.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud2.h>
 
 namespace airi
 {
@@ -108,7 +110,23 @@ public:
     }
 
     ROS_INFO_STREAM_NAMED(sensor_->Name(), "Publishing collisions to " << topic_name_);
-    pub_ = nh_->advertise<sensor_msgs::PointCloud2>(topic_name_, 1);
+
+    if (sdf->HasElement("version")) {
+      version_ = sdf->GetElement("version")->Get<int>();
+      if (version_ != 1 && version_ != 2) {
+        gzthrow(sensor_->Name() << " was configured with an unsupported version: " << version_);
+      }
+    } else {
+      ROS_WARN_NAMED(sensor_->Name(), "No version was specified, using default.");
+    }
+
+    ROS_INFO_STREAM_NAMED(sensor_->Name(), "Using version " << topic_name_);
+
+    if (version_ == 1) {
+      pub_ = nh_->advertise<sensor_msgs::PointCloud>(topic_name_, 1);
+    } else {
+      pub_ = nh_->advertise<sensor_msgs::PointCloud2>(topic_name_, 1);
+    }
 
     world_update_connection_ =
       gazebo::event::Events::ConnectWorldUpdateBegin(std::bind(&BumperPlugin::OnWorldUpdate, this));
@@ -159,7 +177,6 @@ public:
       sensor_msgs::PointCloud2 & cloud =
         sampled_collisions_[collision->GetScopedName()];
       cloud.height = 1;
-
 
       sensor_msgs::PointCloud2Modifier modifier(cloud);
       modifier.setPointCloud2Fields(3,
@@ -231,7 +248,14 @@ public:
     cloud.header.frame_id = link_->GetName();
     cloud.header.stamp.sec = contacts.time().sec();
     cloud.header.stamp.nsec = contacts.time().nsec();
-    pub_.publish(cloud);
+
+    if (version_ == 1) {
+      sensor_msgs::PointCloud equivalent_cloud;
+      sensor_msgs::convertPointCloud2ToPointCloud(cloud, equivalent_cloud);
+      pub_.publish(equivalent_cloud);
+    } else {
+      pub_.publish(cloud);
+    }
   }
 
 private:
@@ -241,6 +265,7 @@ private:
   gazebo::physics::LinkPtr link_;
   gazebo::sensors::ContactSensorPtr sensor_;
 
+  int version_{2};
   std::string topic_name_{"bumper/collisions"};
   double contact_offset_{0.};
   ignition::math::Vector3d displacement_axis_{ignition::math::Vector3d::UnitX};
