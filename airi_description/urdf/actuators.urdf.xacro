@@ -5,6 +5,7 @@
 
   <xacro:macro name="timing-belt-drive" params="drives">
     <transmission name="${drives}_drive">
+      <type>transmission_interface/SimpleTransmission</type>
       <joint name="${drives}">
         <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
       </joint>
