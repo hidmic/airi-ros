@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>airi_base</name>
+  <name>airi_base_py</name>
   <version>0.1.0</version>
-  <description>Base controller for AIRI</description>
+  <description>Base controller for AIRI in Python</description>
   <maintainer email="hid.michel@gmail.com">Michel Hidalgo</maintainer>
   <license>Apache License 2</license>
 
