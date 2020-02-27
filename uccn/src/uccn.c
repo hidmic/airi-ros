@@ -2,40 +2,35 @@
 
 #include <assert.h>
 
-#include <arpa/inet.h>
-#include <net/if.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-
 #include <unistd.h>
 
 #include "uccn/common/hash.h"
 #include "uccn/common/logging.h"
 
-static struct timespec g_uccn_liveliness_timeout = {
+static const struct timespec g_uccn_liveliness_timeout = {
   .tv_sec = CONFIG_UCCN_LIVELINESS_TIMEOUT_MS / 1000,
   .tv_nsec = 1000000L * (CONFIG_UCCN_LIVELINESS_TIMEOUT_MS % 1000)
 };
 
-static struct timespec g_uccn_liveliness_assert_timeout = {
+static const struct timespec g_uccn_liveliness_assert_timeout = {
   .tv_sec = CONFIG_UCCN_LIVELINESS_ASSERT_TIMEOUT_MS / 1000,
   .tv_nsec = 1000000L * (CONFIG_UCCN_LIVELINESS_ASSERT_TIMEOUT_MS % 1000)
 };
 
-static struct timespec g_uccn_peer_discovery_period = {
+static const struct timespec g_uccn_peer_discovery_period = {
   .tv_sec = CONFIG_UCCN_PEER_DISCOVERY_PERIOD_MS / 1000,
   .tv_nsec = 1000000L * (CONFIG_UCCN_PEER_DISCOVERY_PERIOD_MS % 1000),
 };
 
-static struct timespec g_uccn_endpoint_probe_timeout = {
+static const struct timespec g_uccn_endpoint_probe_timeout = {
   .tv_sec = CONFIG_UCCN_ENDPOINT_PROBE_TIMEOUT_MS / 1000,
   .tv_nsec = 1000000L * (CONFIG_UCCN_ENDPOINT_PROBE_TIMEOUT_MS % 1000)
 };
 
-
-int uccn_node_init(struct uccn_node_s * node, const char * name, struct uccn_network_s * network)
+int uccn_node_init(struct uccn_node_s * node, const struct uccn_network_s * network, const char * name)
 {
   int ret, opt = 1;
   struct sockaddr_in address;
@@ -114,7 +109,7 @@ int uccn_node_init(struct uccn_node_s * node, const char * name, struct uccn_net
   node->broadcast_address.sin_addr.s_addr =
       network->inetaddr.s_addr | ~(network->netmaskaddr.s_addr);
 
-  strncpy(node->name, name, CONFIG_UCCN_MAX_NODENAME_SIZE);
+  strncpy(node->name, name, CONFIG_UCCN_MAX_NODE_NAME_SIZE);
 
   inet_ntop(AF_INET, &node->address.sin_addr,
             node->location, sizeof(node->location));
@@ -130,6 +125,14 @@ int uccn_node_init(struct uccn_node_s * node, const char * name, struct uccn_net
   memset(node->trackers, 0, sizeof(node->trackers));
   memset(node->providers, 0, sizeof(node->providers));
   node->num_peers = node->num_providers = node->num_trackers = 0;
+
+#if CONFIG_UCCN_MULTITHREADED
+  ret = pthread_mutex_init(&node->mutex, NULL);
+  if (ret < 0) {
+    uccnerr(SYSTEM_ERR_FROM(__LINE__ - 2, "Failed to initialize node mutex"));
+    goto fail;
+  }
+#endif
 
   ret = eventfd_init(&node->stop_event);
   if (ret < 0) {
@@ -149,24 +152,35 @@ fail:
 }
 
 struct uccn_content_tracker_s *
-uccn_track(struct uccn_node_s * node, struct uccn_resource_s * resource, uccn_content_track_fn track)
+uccn_track(struct uccn_node_s * node,
+           const struct uccn_resource_s * resource,
+           const uccn_content_track_fn track, void * arg)
 {
   size_t i;
 
   struct uccn_content_endpoint_s * endpoint;
   struct uccn_content_tracker_s * tracker;
+
+#if CONFIG_UCCN_MULTITHREADED
+  if (pthread_mutex_lock(&node->mutex) < 0) {
+    uccnerr(SYSTEM_ERR_FROM(__LINE__ - 1, "Failed to lock node mutex"));
+    return NULL;
+  }
+#endif
   for (i = 0; i < node->num_trackers; ++i) {
     tracker = &node->trackers[i];
     endpoint = (struct uccn_content_endpoint_s *)tracker;
     if (endpoint->resource == resource) {
       uccndbg("Updating existing tracker for '%s' resource", resource->path);
       tracker->track = track;
-      return tracker;
+      tracker->arg = arg;
+      goto leave;
     }
     if (endpoint->resource->hash == resource->hash) {
       uccnerr(RUNTIME_ERR("'%s' resource hash collides with '%s's",
                           resource->path, endpoint->resource->path));
-      return NULL;
+      tracker = NULL;
+      goto leave;
     }
   }
   tracker = &node->trackers[node->num_trackers++];
@@ -175,15 +189,27 @@ uccn_track(struct uccn_node_s * node, struct uccn_resource_s * resource, uccn_co
   endpoint->resource = resource;
   endpoint->num_peers = 0;
   tracker->track = track;
+  tracker->arg = arg;
+ leave:
+#if CONFIG_UCCN_MULTITHREADED
+  assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
   return tracker;
 }
 
 struct uccn_content_provider_s *
-uccn_advertise(struct uccn_node_s * node, struct uccn_resource_s * resource)
+uccn_advertise(struct uccn_node_s * node, const struct uccn_resource_s * resource)
 {
   size_t i;
   struct uccn_content_provider_s * provider;
   struct uccn_content_endpoint_s * endpoint;
+
+#if CONFIG_UCCN_MULTITHREADED
+  if (pthread_mutex_lock(&node->mutex) < 0) {
+    uccnerr(SYSTEM_ERR_FROM(__LINE__ - 1, "Failed to lock node mutex"));
+    return NULL;
+  }
+#endif
   for (i = 0; i < node->num_providers; ++i) {
     provider = &node->providers[i];
     endpoint = (struct uccn_content_endpoint_s *)provider;
@@ -203,6 +229,9 @@ uccn_advertise(struct uccn_node_s * node, struct uccn_resource_s * resource)
   endpoint->node = node;
   endpoint->resource = resource;
   endpoint->num_peers = 0;
+#if CONFIG_UCCN_MULTITHREADED
+  assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
   return provider;
 }
 
@@ -224,7 +253,7 @@ int uccn_post(struct uccn_content_provider_s * provider, const void * content)
   struct uccn_content_endpoint_s * endpoint =
       (struct uccn_content_endpoint_s *)provider;
   struct uccn_node_s * node = endpoint->node;
-  struct uccn_resource_s * resource = endpoint->resource;
+  const struct uccn_resource_s * resource = endpoint->resource;
 
   ret = 0;
   if (endpoint->num_peers > 0) {
@@ -233,7 +262,13 @@ int uccn_post(struct uccn_content_provider_s * provider, const void * content)
       return ret;
     }
     timespec_add(&new_liveliness_deadline, &g_uccn_liveliness_assert_timeout);
-
+#if CONFIG_UCCN_MULTITHREADED
+    ret = pthread_mutex_lock(&node->mutex);
+    if (ret < 0) {
+      uccnerr(SYSTEM_ERR_FROM(__LINE__ - 2, "Failed to lock node mutex"));
+      return ret;
+    }
+#endif
     packet = (struct buffer_head_s *)&node->outgoing_buffer;
     mpack_writer_init(&writer, packet->data, packet->size);
     {
@@ -246,6 +281,9 @@ int uccn_post(struct uccn_content_provider_s * provider, const void * content)
           blob = (struct buffer_head_s *)&node->content_buffer;
           if ((ret = resource->pack(resource, content, &blob)) < 0) {
             uccndbg(BACKTRACE_FROM(__LINE__ - 1));
+#if CONFIG_UCCN_MULTITHREADED
+            assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
             return ret;
           }
           mpack_write_bin(&writer, blob->data, blob->length);
@@ -258,6 +296,9 @@ int uccn_post(struct uccn_content_provider_s * provider, const void * content)
     if ((err = mpack_writer_destroy(&writer)) != mpack_ok) {
       uccnerr(RUNTIME_ERR("Failed to build '%s' content packet: %s",
                           resource->path, mpack_error_to_string(err)));
+#if CONFIG_UCCN_MULTITHREADED
+      assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
       return -1;
     }
 
@@ -275,6 +316,9 @@ int uccn_post(struct uccn_content_provider_s * provider, const void * content)
       peer->liveliness.next_local_deadline = new_liveliness_deadline;
       ++ret;
     }
+#if CONFIG_UCCN_MULTITHREADED
+    assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
   }
 
   return ret;
@@ -304,7 +348,6 @@ uccn_register_peer(struct uccn_node_s * node, struct sockaddr_in * address)
     peer = &node->peers[i];
 
     if (same_sockaddr_in(&peer->address, address)) {
-      // uccndbg("Peer %s@%s already registered", peer->name, peer->location);
       peer->liveliness.next_remote_deadline = current_time;
       timespec_add(&peer->liveliness.next_remote_deadline, &g_uccn_liveliness_timeout);
       return peer;
@@ -314,7 +357,7 @@ uccn_register_peer(struct uccn_node_s * node, struct sockaddr_in * address)
   peer = &node->peers[node->num_peers++];
   peer->address = *address;
 
-  strncpy(peer->name, "anon", CONFIG_UCCN_MAX_NODENAME_SIZE);
+  strncpy(peer->name, "anon", CONFIG_UCCN_MAX_NODE_NAME_SIZE);
   inet_ntop(AF_INET, &address->sin_addr, peer->location, sizeof(peer->location));
   snprintf(&peer->location[strlen(peer->location)],
            sizeof(peer->location) - strlen(peer->location),
@@ -344,13 +387,13 @@ void uccn_resource_init(struct uccn_resource_s * resource, const char * path)
 {
   assert(resource != NULL);
   assert(path != NULL);
-  resource->path = path;
+  strncpy(resource->path, path, CONFIG_UCCN_MAX_RESOURCE_PATH_SIZE);
   resource->hash = djb2(path);
   resource->pack = (uccn_content_pack_fn)content_passthrough;
   resource->unpack = (uccn_content_unpack_fn)content_passthrough;
 }
 
-static ssize_t generic_record_pack(struct uccn_record_s * record,
+static ssize_t generic_record_pack(const struct uccn_record_s * record,
                                    const void * content,
                                    struct buffer_head_s ** blob)
 {
@@ -365,7 +408,7 @@ static ssize_t generic_record_pack(struct uccn_record_s * record,
   return record->ts->serialize(record->ts, content, *blob);
 }
 
-static ssize_t generic_record_unpack(struct uccn_record_s * record,
+static ssize_t generic_record_unpack(const struct uccn_record_s * record,
                                      const struct buffer_head_s * blob,
                                      void ** content)
 {
@@ -532,6 +575,7 @@ int uccn_discover_peers(struct uccn_node_s * node)
     return ret;
   }
 
+  uccndbg("Attempting to discover peers");
   nbytes = sendto(node->socket, outgoing_packet->data, outgoing_packet->length,
                   0, (struct sockaddr *)&node->broadcast_address,
                   sizeof(node->broadcast_address));
@@ -596,7 +640,7 @@ int uccn_process_incoming_broadcast(struct uccn_node_s * node)
   incoming_packet->length = nbytes;
 
   if (same_sockaddr_in(&address, &node->address)) {
-    uccndbg("Ignoring broadcast to self");
+    // Ignoring broadcast to self
     return 0;
   }
 
@@ -642,12 +686,14 @@ int uccn_process_incoming(struct uccn_node_s * node,
   return 0;
 }
 
-int uccn_spin(struct uccn_node_s * node, struct timespec * timeout)
+int uccn_spin(struct uccn_node_s * node, const struct timespec * timeout)
 {
   fd_set rfds;
-  int nfds, ret = 0;
+  int nfds, nret = 0, ret = 0;
   size_t num_active_trackers;
-  struct timespec current_time, next_deadline;
+  struct timespec stimeout;
+  struct timespec current_time;
+  struct timespec next_deadline;
   struct timespec next_probe_time;
   struct timespec next_assert_time;
   struct timespec next_discovery_time;
@@ -679,23 +725,39 @@ int uccn_spin(struct uccn_node_s * node, struct timespec * timeout)
   nfds += 1;
 
   do {
-    if (ret > 0) {
+#if CONFIG_UCCN_MULTITHREADED
+    ret = pthread_mutex_lock(&node->mutex);
+    if (ret < 0) {
+      uccnerr(SYSTEM_ERR_FROM(__LINE__ - 2, "Failed to lock node mutex"));
+      break;
+    }
+#endif
+    if (nret > 0) {
       if (FD_ISSET(eventfd_fileno(&node->stop_event), &rfds)) {
         ret = eventfd_clear(&node->stop_event);
         if (ret < 0) {
           uccndbg(BACKTRACE_FROM(__LINE__ - 2));
+#if CONFIG_UCCN_MULTITHREADED
+          assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
         }
         break;
       }
       if (FD_ISSET(node->socket, &rfds)) {
         if ((ret = uccn_process_incoming_unicast(node)) < 0) {
           uccndbg(BACKTRACE_FROM(__LINE__ - 1));
+#if CONFIG_UCCN_MULTITHREADED
+          assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
           break;
         }
       }
       if (FD_ISSET(node->broadcast_socket, &rfds)) {
         if ((ret = uccn_process_incoming_broadcast(node)) < 0) {
           uccndbg(BACKTRACE_FROM(__LINE__ - 1));
+#if CONFIG_UCCN_MULTITHREADED
+          assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
           break;
         }
       }
@@ -703,12 +765,18 @@ int uccn_spin(struct uccn_node_s * node, struct timespec * timeout)
 
     if ((ret = clock_gettime(CLOCK_MONOTONIC, &current_time)) != 0) {
       uccnerr(SYSTEM_ERR_FROM(__LINE__ - 1, "Failed to get current time"));
-      return ret;
+#if CONFIG_UCCN_MULTITHREADED
+      assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
+      break;
     }
 
     if (timespec_cmp(&current_time, &next_assert_time) >= 0) {
       if ((ret = uccn_assert_liveliness(node, &next_assert_time)) < 0) {
         uccndbg(BACKTRACE_FROM(__LINE__ - 1));
+#if CONFIG_UCCN_MULTITHREADED
+        assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
         break;
       }
     }
@@ -717,6 +785,9 @@ int uccn_spin(struct uccn_node_s * node, struct timespec * timeout)
       if ((ret = uccn_probe_endpoints(node, &num_active_trackers,
                                       NULL, &next_probe_time)) < 0) {
         uccndbg(BACKTRACE_FROM(__LINE__ - 2));
+#if CONFIG_UCCN_MULTITHREADED
+        assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
         break;
       }
     }
@@ -725,16 +796,23 @@ int uccn_spin(struct uccn_node_s * node, struct timespec * timeout)
       if (timespec_cmp(&current_time, &next_discovery_time) >= 0) {
         if ((ret = uccn_discover_peers(node)) < 0) {
           uccndbg(BACKTRACE_FROM(__LINE__ - 1));
+#if CONFIG_UCCN_MULTITHREADED
+          assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
           break;
         }
         timespec_add(&next_discovery_time, &g_uccn_peer_discovery_period);
       }
     }
+#if CONFIG_UCCN_MULTITHREADED
+    assert(pthread_mutex_unlock(&node->mutex) == 0);
+#endif
 
     if ((ret = clock_gettime(CLOCK_MONOTONIC, &current_time)) != 0) {
       uccnerr(SYSTEM_ERR_FROM(__LINE__ - 1, "Failed to get current time"));
       break;
     }
+
     if (timespec_cmp(&current_time, &timeout_time) >= 0) {
       break;
     }
@@ -748,17 +826,26 @@ int uccn_spin(struct uccn_node_s * node, struct timespec * timeout)
     if (timespec_cmp(&next_deadline, &next_discovery_time) > 0) {
       next_deadline = next_discovery_time;
     }
-    timespec_diff(&next_deadline, &current_time);
     assert(TIMESPEC_ISFINITE(&next_deadline));
 
-    FD_ZERO(&rfds);
-    FD_SET(node->socket, &rfds);
-    FD_SET(node->broadcast_socket, &rfds);
-    FD_SET(eventfd_fileno(&node->stop_event), &rfds);
+    do {
+      FD_ZERO(&rfds);
+      FD_SET(node->socket, &rfds);
+      FD_SET(node->broadcast_socket, &rfds);
+      FD_SET(eventfd_fileno(&node->stop_event), &rfds);
 
-    ret = pselect(nfds, &rfds, NULL, NULL, &next_deadline, NULL);
+      if ((ret = clock_gettime(CLOCK_MONOTONIC, &current_time)) != 0) {
+        uccnerr(SYSTEM_ERR_FROM(__LINE__ - 1, "Failed to get current time"));
+        break;
+      }
+
+      stimeout = next_deadline;
+      timespec_diff(&stimeout, &current_time);
+      ret = nret = pselect(nfds, &rfds, NULL, NULL, &stimeout, NULL);
+    } while(ret < 0 && errno == EINTR);
+
     if (ret < 0) {
-      uccnerr(SYSTEM_ERR_FROM(__LINE__ - 2, "Failed to poll"));
+      uccnerr(SYSTEM_ERR_FROM(__LINE__ - 3, "Failed to poll sockets"));
     }
   } while (ret >= 0);
 
@@ -1067,7 +1154,7 @@ int uccn_process_link_group(struct uccn_node_s * node, struct uccn_peer_s * peer
       data_code = mpack_expect_u8(reader);
       switch(data_code) {
         case UCCN_NODE_NAME:
-          mpack_expect_cstr(reader, peer->name, CONFIG_UCCN_MAX_NODENAME_SIZE);
+          mpack_expect_cstr(reader, peer->name, CONFIG_UCCN_MAX_NODE_NAME_SIZE);
           break;
         case UCCN_PROVIDED_ARRAY:
           if (mpack_expect_array_max_or_nil(reader, CONFIG_UCCN_MAX_NUM_RESOURCES, &array_size)) {
@@ -1223,14 +1310,29 @@ int uccn_stop(struct uccn_node_s * node) {
 }
 
 int uccn_node_fini(struct uccn_node_s * node) {
-  int ret = close(node->socket);
-  if (ret < 0) {
-    uccnerr(SYSTEM_ERR_FROM(__LINE__ - 2, "Failed to close endpoint socket"));
-    return ret;
+  int ret = 0, iret;
+
+  iret = close(node->socket);
+  if (iret < 0) {
+    uccnerr(SYSTEM_ERR_FROM(__LINE__ - 2, "Failed to close node socket"));
+    ret = iret;
   }
-  ret = eventfd_fini(&node->stop_event);
-  if (ret < 0) {
+  iret = close(node->broadcast_socket);
+  if (iret < 0) {
+    uccnerr(SYSTEM_ERR_FROM(__LINE__ - 2, "Failed to close node socket"));
+    ret = iret;
+  }
+#if CONFIG_UCCN_MULTITHREADED
+  iret = pthread_mutex_destroy(&node->mutex);
+  if (iret < 0) {
+    uccnerr(SYSTEM_ERR_FROM(__LINE__ - 2, "Failed to destroy node mutex"));
+    ret = iret;
+  }
+#endif
+  iret = eventfd_fini(&node->stop_event);
+  if (iret < 0) {
     uccndbg(BACKTRACE_FROM(__LINE__ - 2));
+    ret = iret;
   }
   return ret;
 }
