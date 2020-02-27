@@ -43,6 +43,6 @@ static const struct uccn_record_typesupport_s g_drive_state_typesupport = {
   .deserialize = (uccn_record_deserialize_fn)drive_state_deserialize,
 };
 
-const struct uccn_record_typesupport_s * get_drive_state_typesupport(void) {
+const struct uccn_record_typesupport_s * get_airi_drive_state_typesupport(void) {
   return &g_drive_state_typesupport;
 }
