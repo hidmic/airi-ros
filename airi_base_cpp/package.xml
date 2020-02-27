@@ -9,12 +9,11 @@
   <author email="hid.michel@gmail.com">Michel Hidalgo</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>python-msgpack</exec_depend>
-  <exec_depend>python-numpy-stl-pip</exec_depend>
-  <exec_depend>rospy</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>tf2_msgs</exec_depend>
-  <exec_depend>tf2_ros</exec_depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
 
 </package>
