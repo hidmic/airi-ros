@@ -8,7 +8,7 @@ struct qencoder_state_s
   int32_t ticks;
 };
 
-struct airi_drive_state_s
+struct airi_uccn_drive_state_s
 {
   struct qencoder_state_s left_encoder;
   struct qencoder_state_s right_encoder;
@@ -23,7 +23,7 @@ extern "C"
 #define EXTERN extern
 #endif
 
-const const struct uccn_record_typesupport_s * get_airi_drive_state_typesupport(void);
+const struct uccn_record_typesupport_s * get_airi_uccn_drive_state_typesupport(void);
 
 #undef EXTERN
 #if defined(__cplusplus)
