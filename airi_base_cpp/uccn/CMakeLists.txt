@@ -4,6 +4,7 @@ project(airi-uccn)
 add_subdirectory(uccn)
 
 add_library(${PROJECT_NAME}
+  src/drive_command_typesupport.c
   src/drive_state_typesupport.c
 )
 
