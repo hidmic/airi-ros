@@ -1,11 +1,17 @@
 #ifndef AIRI_UCCN_H_
 #define AIRI_UCCN_H_
 
+#include <stdint.h>
 #include "uccn/uccn.h"
+
+typedef int32_t q16_16_t;
 
 struct qencoder_state_s
 {
-  int32_t ticks;
+  int32_t  ticks;  // in ticks
+  q16_16_t position;  // in rads
+  q16_16_t displacement;  // in rads
+  q16_16_t velocity;  // in rads/sec
 };
 
 struct airi_uccn_drive_state_s
@@ -16,7 +22,7 @@ struct airi_uccn_drive_state_s
 
 struct wheel_command_s
 {
-  int32_t ticks_per_sec;
+  q16_16_t velocity;  // in rads/sec
 };
 
 struct airi_uccn_drive_command_s
