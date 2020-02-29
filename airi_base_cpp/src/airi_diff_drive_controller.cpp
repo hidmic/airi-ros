@@ -9,6 +9,7 @@
 #include <utility>
 #include <string>
 
+#include <ros/callback_queue.h>
 #include <tf2/LinearMath/Quaternion.h>
 
 #include <geometry_msgs/TransformStamped.h>
@@ -23,7 +24,7 @@ namespace {
 
 ::uccn::network get_network(const std::string & interface) {
   struct ifaddrs * ifaddresses = NULL;
-  if (!getifaddrs(&ifaddresses)) {
+  if (getifaddrs(&ifaddresses) < 0) {
     throw std::system_error(errno, std::system_category(), strerror(errno));
   }
   std::unique_ptr<struct ifaddrs, void(*)(struct ifaddrs *)> guard(ifaddresses, freeifaddrs);
@@ -127,24 +128,24 @@ void DiffDriveController::uDriveStateCallback(const airi::uccn::drive_state & st
   }
 }
 
-void DiffDriveController::uspin()
-{
-  try {
-    unode_->spin();
-  } catch (const std::exception & e) {
-    ROS_ERROR_STREAM(e.what());
-    ros::shutdown();
-  }
-}
-
 void DiffDriveController::spin()
 {
-  std::thread uthread(std::bind(&DiffDriveController::uspin, this));
-
+  std::atomic_bool spinning{true};
+  std::thread uthread([&]() {
+      try {
+        unode_->spin();
+      } catch (const std::exception & e) {
+        ROS_ERROR("%s, stopping spin\n", e.what());
+      }
+      spinning.store(false);
+    });
   try {
-    ros::spin();
+    ros::CallbackQueue * callback_queue = ros::getGlobalCallbackQueue();
+    while (ros::ok() && spinning.load()) {
+      callback_queue->callAvailable(ros::WallDuration(0.5));
+    }
   } catch (const std::exception & e) {
-    ROS_ERROR_STREAM(e.what());
+    ROS_ERROR("%s, stopping spin\n", e.what());
     unode_->stop();
     uthread.join();
     throw;

@@ -3,12 +3,18 @@
 #include "airi_base_cpp/airi_diff_drive_controller.hpp"
 
 int main(int argc, char *argv[]) {
+  int ret = 0;
+
   ros::init(argc, argv, "airi_diff_drive_controller_node");
 
   try {
     airi::base::DiffDriveController controller;
     controller.spin();
   } catch (const std::exception & e) {
-    ROS_ERROR_STREAM(e.what());
+    std::cerr << e.what() << std::endl;
+    ret = -1;
   }
+
+  ros::shutdown();
+  return ret;
 }
