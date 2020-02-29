@@ -42,17 +42,16 @@ namespace {
 }  // namespace
 
 DiffDriveController::DiffDriveController()
-  : pnh_{"~"}, udrive_state_{"/drive/state"}
+  : pnh_{"~"}, udrive_state_{"/drive/state"}, udrive_command_{"/drive/command"}
 {
   std::string interface;
   if (!pnh_.getParam("interface", interface)) {
     throw std::runtime_error("No interface for uCCN was specified");
   }
-  unode_ = std::make_shared<::uccn::node>(get_network(interface), ros::this_node::getName());
 
   wheel_base_ = pnh_.param("wheel_base", 0.23);
   wheel_diameter_ = pnh_.param("wheel_diameter", 0.098);
-  wheel_encoder_resolution_ = pnh_.param("wheel_encoder_resolution", 4096);
+  wheel_encoder_resolution_ = pnh_.param("wheel_encoder_resolution", 2048);
   odom_frame_id_ = pnh_.param<std::string>("odom_frame", "odom");
   base_frame_id_ = pnh_.param<std::string>("base_frame", "base");
   publish_tf_ = pnh_.param("publish_tf", true);
@@ -61,9 +60,25 @@ DiffDriveController::DiffDriveController()
   left_encoder_ticks_pub_ = nh_.advertise<std_msgs::Int32>("encoders/left/ticks", 10);
   right_encoder_ticks_pub_ = nh_.advertise<std_msgs::Int32>("encoders/right/ticks", 10);
 
+  unode_ = std::make_unique<::uccn::node>(get_network(interface), ros::this_node::getName());
+
   unode_->track<airi::uccn::drive_state>(
       udrive_state_, std::bind(&DiffDriveController::uDriveStateCallback,
                                this, std::placeholders::_1));
+
+  udrive_command_provider_ = unode_->advertise(udrive_command_);
+
+  command_sub_ = nh_.subscribe<const geometry_msgs::Twist &>(
+      "cmd_vel", 10, &DiffDriveController::commandCallback, this);
+}
+
+void DiffDriveController::commandCallback(const geometry_msgs::Twist & twist) {
+  airi::uccn::drive_command command;
+  command.right_wheel.ticks_per_sec = wheel_encoder_resolution_ * (
+      2. * twist.linear.x + twist.angular.z * wheel_base_) / (wheel_diameter_ * M_PI);
+  command.left_wheel.ticks_per_sec = wheel_encoder_resolution_ * (
+      2. * twist.linear.x - twist.angular.z * wheel_base_) / (wheel_diameter_ * M_PI);
+  udrive_command_provider_.post(command);
 }
 
 void DiffDriveController::uDriveStateCallback(const airi::uccn::drive_state & state) {
