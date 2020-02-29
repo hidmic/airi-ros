@@ -14,6 +14,17 @@ struct airi_uccn_drive_state_s
   struct qencoder_state_s right_encoder;
 };
 
+struct wheel_command_s
+{
+  int32_t ticks_per_sec;
+};
+
+struct airi_uccn_drive_command_s
+{
+  struct wheel_command_s left_wheel;
+  struct wheel_command_s right_wheel;
+};
+
 #undef EXTERN
 #if defined(__cplusplus)
 #define EXTERN extern "C"
@@ -24,6 +35,8 @@ extern "C"
 #endif
 
 const struct uccn_record_typesupport_s * get_airi_uccn_drive_state_typesupport(void);
+
+const struct uccn_record_typesupport_s * get_airi_uccn_drive_command_typesupport(void);
 
 #undef EXTERN
 #if defined(__cplusplus)

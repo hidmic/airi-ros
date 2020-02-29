@@ -9,14 +9,18 @@ namespace airi {
 
 namespace uccn {
 
-struct drive_state
+struct drive_state : airi_uccn_drive_state_s
 {
   static const uccn_record_typesupport_s * get_typesupport() {
     return get_airi_uccn_drive_state_typesupport();
   }
+};
 
-  qencoder_state_s left_encoder;
-  qencoder_state_s right_encoder;
+struct drive_command : airi_uccn_drive_command_s
+{
+  static const uccn_record_typesupport_s * get_typesupport() {
+    return get_airi_uccn_drive_command_typesupport();
+  }
 };
 
 }  // namespace uccn
