@@ -74,34 +74,33 @@ DiffDriveController::DiffDriveController()
 
 void DiffDriveController::commandCallback(const geometry_msgs::Twist & twist) {
   airi::uccn::drive_command command;
-  command.right_wheel.ticks_per_sec = wheel_encoder_resolution_ * (
-      2. * twist.linear.x + twist.angular.z * wheel_base_) / (wheel_diameter_ * M_PI);
-  command.left_wheel.ticks_per_sec = wheel_encoder_resolution_ * (
-      2. * twist.linear.x - twist.angular.z * wheel_base_) / (wheel_diameter_ * M_PI);
+  command.right_wheel.velocity = (
+      2. * twist.linear.x + twist.angular.z * wheel_base_) / wheel_diameter_;
+  command.left_wheel.velocity = (
+      2. * twist.linear.x - twist.angular.z * wheel_base_) / wheel_diameter_;
   udrive_command_provider_.post(command);
 }
 
 void DiffDriveController::uDriveStateCallback(const airi::uccn::drive_state & state) {
-  ros::Time current_time = ros::Time::now();
+  const ros::Time current_time = ros::Time::now();
 
-  double vk = 0.0, wk = 0.0;
-  if (last_state_time_.isValid()) {
-    airi::uccn::drive_state delta;
-    delta.left_encoder.ticks = state.left_encoder.ticks - last_state_.left_encoder.ticks;
-    delta.right_encoder.ticks = state.right_encoder.ticks - last_state_.right_encoder.ticks;
+  const double v_k = wheel_diameter_ * q16_16_to_double(
+      state.right_encoder.velocity +
+      state.left_encoder.velocity) / 4.;
+  const double w_k = wheel_diameter_ * q16_16_to_double(
+      state.right_encoder.velocity -
+      state.left_encoder.velocity) / (2. * wheel_base_);
 
-    vk = M_PI * wheel_diameter_ * (delta.left_encoder.ticks + delta.right_encoder.ticks) /
-        (2. * wheel_encoder_resolution_);
-    wk = M_PI * wheel_diameter_ * (delta.right_encoder.ticks - delta.left_encoder.ticks) /
-        (wheel_base_ * wheel_encoder_resolution_);
+  const double dxy_k = wheel_diameter_ * q16_16_to_double(
+      state.right_encoder.displacement +
+      state.left_encoder.displacement) / 4.;
+  const double dtheta_k = wheel_diameter_ * q16_16_to_double(
+      state.right_encoder.displacement -
+      state.left_encoder.displacement) / (2. * wheel_base_);
 
-    double dt =(current_time - last_state_time_).toSec();
-    estimated_pose_.x += vk * dt * std::cos(estimated_pose_.theta);
-    estimated_pose_.y += vk * dt * std::sin(estimated_pose_.theta);
-    estimated_pose_.theta += wk * dt;
-  }
-  last_state_time_ = current_time;
-  last_state_ = state;
+  estimated_pose_.x += dxy_k * std::cos(estimated_pose_.theta);
+  estimated_pose_.y += dxy_k * std::sin(estimated_pose_.theta);
+  estimated_pose_.theta += dtheta_k;
 
   std_msgs::Int32 ticks;
   ticks.data = state.left_encoder.ticks;
@@ -123,7 +122,8 @@ void DiffDriveController::uDriveStateCallback(const airi::uccn::drive_state & st
   odom.pose.pose.orientation.y = estimated_quat.y();
   odom.pose.pose.orientation.z = estimated_quat.z();
   odom.pose.pose.orientation.w = estimated_quat.w();
-
+  odom.twist.twist.linear.x = v_k;
+  odom.twist.twist.angular.z = w_k;
   odom_pub_.publish(odom);
 
   if (publish_tf_) {
