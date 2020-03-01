@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>airi_base_cpp</name>
+  <version>0.1.0</version>
+  <description>Base controller for AIRI</description>
+  <maintainer email="hid.michel@gmail.com">Michel Hidalgo</maintainer>
+  <license>Apache License 2</license>
+
+  <author email="hid.michel@gmail.com">Michel Hidalgo</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+
+</package>

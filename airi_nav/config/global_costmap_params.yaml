@@ -1,0 +1,24 @@
+global_costmap:
+  global_frame: map
+  robot_base_frame: base_link
+  update_frequency: 5.0
+  publish_frequency: 2.0
+
+  obstacle_range: 5.0
+  raytrace_range: 6.0
+  max_obstacle_height: 1.2
+
+  robot_radius: 0.2
+  inflation_radius: 0.2
+  footprint_clearing_enabled: true
+  track_unknown_space: false
+
+  plugins:
+    - {name: map_layer, type: "costmap_2d::StaticLayer"}
+
+  map_layer:
+    map_topic: /map
+    allow_size_updates: true
+    subscribe_to_updates: false
+    track_unknown_space: false
+    use_maximum: false

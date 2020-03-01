@@ -1,0 +1,17 @@
+#! /usr/bin/env python
+
+import rospy
+
+from airi_base import MPU6050Driver
+
+if __name__ == '__main__':
+    rospy.init_node('airi_base_node')
+    imu_driver = MPU6050Driver()
+    imu_driver.start()
+    try:
+        rospy.spin()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        imu_driver.shutdown()
+        imu_driver.join()

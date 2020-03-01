@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<robot name="materials" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <material name="steel">
+    <color rgba="0.875 0.87109375 0.85546875 1.0" />
+  </material>
+
+  <material name="rubber">
+    <color rgba="0.1484375 0.1484375 0.1484375 1.0" />
+  </material>
+
+  <material name="thermoplastic">
+    <color rgba="0.2578125 0.2578125 0.2578125 1.0" />
+  </material>
+
+  <material name="acrylic">
+    <color rgba="0.97265625 0.97265625 0.97265625 0.4" />
+  </material>
+</robot>

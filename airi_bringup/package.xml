@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>airi_bringup</name>
+  <version>0.1.0</version>
+  <description>Bringup launch files for AIRI</description>
+
+  <maintainer email="hid.michel@gmail.com">Michel Hidalgo</maintainer>
+  <license>Apache License 2</license>
+
+  <author email="hid.michel@gmail.com">Michel Hidalgo</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>airi_gazebo</exec_depend>
+  <exec_depend>airi_nav</exec_depend>
+  <exec_depend>airi_slam</exec_depend>
+
+  <exec_depend>roslaunch</exec_depend>
+
+  <export>
+  </export>
+</package>

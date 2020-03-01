@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>airi_msgs</name>
+  <version>0.1.0</version>
+  <description>AIRI-specific messages</description>
+  <maintainer email="hid.michel@gmail.com">Michel Hidalgo</maintainer>
+  <license>Apache License 2</license>
+
+  <author email="hid.michel@gmail.com">Michel Hidalgo</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>std_msgs</depend>
+
+</package>
