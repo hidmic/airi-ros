@@ -85,6 +85,8 @@ struct uccn_peer_s
     struct timespec next_local_deadline;
   } liveliness;
 
+  uint32_t provided_content_hash;
+  uint32_t tracked_content_hash;
   size_t num_links;
 };
 
@@ -190,6 +192,8 @@ struct uccn_content_provider_s * uccn_advertise(struct uccn_node_s * node,
 int uccn_post(struct uccn_content_provider_s * provider, const void * content);
 
 int uccn_spin(struct uccn_node_s * node, const struct timespec * timeout);
+
+int uccn_spin_until(struct uccn_node_s * node, const struct timespec * timeout_time);
 
 int uccn_stop(struct uccn_node_s * node);
 
