@@ -2,6 +2,7 @@
 
 import subprocess
 import rospy
+import tf2_ros
 from std_msgs.msg import String
 from utils import log
 from sqlalchemy import create_engine
@@ -12,24 +13,30 @@ from models import Base
 
 #db_path = 'sqlite:///'
 db_path = 'sqlite:////Users/juanignaciobattaglino/Documents/UTN2019/ProyectoFinal/proyectoheatmap.db'
-measure_list = []
-
-def measure_callback (data):
-    measure_list = data.data
 
 def ros_save_measure():
+
     engine = create_engine(db_path, echo=False)
     engine.execute('PRAGMA foreign_keys = ON')
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
+    
     rospy.init_node('db', anonymous=True)
+    rospy.init_node('tf2_point_listener', anonymous=True)
+    tfBuffer = tf2_ros.Buffer()
+    listener = tf2_ros.TransformListener(tfBuffer)
+    
+    def measure_callback (data):
+        measure_list = data.data #Needs to be converted from string to list of lists
+        trans = tfBuffer.lookup_transform(, rospy.Time()) #?
+        point = (trans.transform.translation.x, trans.transform.translation.y)
+        save_measure_in_db(session, measure_list, point)
 
-    #while aca?
     rospy.Subscriber('measure_db', String, measure_callback)
 
     # Para recibir point me deberia suscribir a un topico y enviar timestamp del punto.
-    save_measure_in_db(session, measure_list, point)
+    
     rospy.spin()
 
 
