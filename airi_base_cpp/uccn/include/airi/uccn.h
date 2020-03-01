@@ -6,6 +6,14 @@
 
 typedef int32_t q16_16_t;
 
+#if defined(__cplusplus)
+#define q16_16_to_double(n)  (static_cast<double>(n) / (1 << 16))
+#define double_to_q16_16(n)  (static_cast<q16_16_t>((n) * (1 << 16)))
+#else
+#define q16_16_to_double(n)  (((double)(n)) / (1 << 16))
+#define double_to_q16_16(n)  ((q16_16_t)((n) * (1 << 16)))
+#endif
+
 struct qencoder_state_s
 {
   int32_t  ticks;  // in ticks
