@@ -74,10 +74,10 @@ DiffDriveController::DiffDriveController()
 
 void DiffDriveController::commandCallback(const geometry_msgs::Twist & twist) {
   airi::uccn::drive_command command;
-  command.right_wheel.velocity = (
-      2. * twist.linear.x + twist.angular.z * wheel_base_) / wheel_diameter_;
-  command.left_wheel.velocity = (
-      2. * twist.linear.x - twist.angular.z * wheel_base_) / wheel_diameter_;
+  command.right_wheel.velocity = double_to_q16_16((
+      2. * twist.linear.x + twist.angular.z * wheel_base_) / wheel_diameter_);
+  command.left_wheel.velocity = double_to_q16_16((
+      2. * twist.linear.x - twist.angular.z * wheel_base_) / wheel_diameter_);
   udrive_command_provider_.post(command);
 }
 
