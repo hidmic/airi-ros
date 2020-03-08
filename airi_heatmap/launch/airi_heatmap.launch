@@ -1,0 +1,7 @@
+<launch>
+    <node name="measure_node" pkg="airi_heatmap" type="talker" />
+    <node name="db_node" pkg="airi_heatmap" type="listener" />
+        <env name="DB_PATH" value="sqlite:////Users/airi/Documents/proyectoheatmap.db" />
+    <node name="pdf_node" pkg="airi_heatmap" type="listener" />
+        <env name="DB_PATH" value="sqlite:////Users/airi/Documents/proyectoheatmap.db" />
+</launch>

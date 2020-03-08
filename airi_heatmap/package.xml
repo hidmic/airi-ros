@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>airi_heatmap</name>
+  <version>0.1.0</version>
+  <description>AIRI-heatmap development</description>
+  <maintainer email="juanibattaglino@gmail.com">Juan Ignacio Battaglino</maintainer>
+  <license>Apache License 2</license>
+  <author email="juanibattaglino@gmail.com">Michel Hidalgo</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>std_msgs</depend>
+  <depend>rospy</depend>
+  <depend>tf2_ros</depend>
+  <depend>sqlalchemy</depend>
+  <depend>subprocess</depend>
+
+</package>

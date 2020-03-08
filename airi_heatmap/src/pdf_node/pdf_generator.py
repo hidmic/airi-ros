@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import subprocess
 import rospy
 from std_msgs.msg import String
@@ -8,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DB_PATH = 'sqlite:////Users/juanignaciobattaglino/Documents/UTN2019/ProyectoFinal/proyectoheatmap.db'
+DB_PATH = os.environ('DB_PATH')
 Base = declarative_base()
 
 def ros_pdf_generator():
@@ -16,7 +17,7 @@ def ros_pdf_generator():
     engine = create_engine(DB_PATH, echo=False)
     Session = sessionmaker(bind=engine)
     session = Session()
-    rospy.init_node('pdf', anonymous=True)
+    rospy.init_node('pdf_node', anonymous=True)
 
     def pdf_generator_callback(data):
         pdf_generator(session)

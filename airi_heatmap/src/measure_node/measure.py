@@ -9,7 +9,7 @@ from utils import log
 #sudo nmcli -f SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY dev wifi
 
 def ros_measure():
-    rospy.init_node('measure', anonymous=True)
+    rospy.init_node('measure_node', anonymous=True)
     pub = rospy.Publisher('measure_db', String, queue_size=10)
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
