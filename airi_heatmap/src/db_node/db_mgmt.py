@@ -30,7 +30,7 @@ def ros_save_measure():
     
     def measure_callback (data):
         measure_list = ast.literal_eval(data.data)
-        trans = tfBuffer.lookup_transform(, rospy.Time()) #?
+        trans = tfBuffer.lookup_transform("map", "base_link", rospy.Time(0))
         point = (trans.transform.translation.x, trans.transform.translation.y)
         save_measure_in_db(session, measure_list, point)
 
