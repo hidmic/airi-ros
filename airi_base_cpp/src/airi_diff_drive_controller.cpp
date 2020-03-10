@@ -49,9 +49,8 @@ DiffDriveController::DiffDriveController()
     throw std::runtime_error("No interface for uCCN was specified");
   }
 
-  wheel_base_ = pnh_.param("wheel_base", 0.23);
-  wheel_diameter_ = pnh_.param("wheel_diameter", 0.098);
-  wheel_encoder_resolution_ = pnh_.param("wheel_encoder_resolution", 2048);
+  wheel_base_ = pnh_.param("wheel_base", 0.235);
+  wheel_diameter_ = pnh_.param("wheel_diameter", 0.096);
   odom_frame_id_ = pnh_.param<std::string>("odom_frame", "odom");
   base_frame_id_ = pnh_.param<std::string>("base_frame", "base");
   publish_tf_ = pnh_.param("publish_tf", true);
