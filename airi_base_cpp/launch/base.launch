@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="airi_base_cpp" type="airi_diff_drive_controller_node"
+        name="base_node" output="screen">
+    <param name="interface" value="eth1"/>
+  </node>
+</launch>

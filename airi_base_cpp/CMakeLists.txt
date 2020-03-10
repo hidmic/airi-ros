@@ -44,3 +44,8 @@ install(TARGETS ${PROJECT_NAME}
 install(TARGETS airi_diff_drive_controller_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+## Mark other files for installation (e.g. launch files, etc.)
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

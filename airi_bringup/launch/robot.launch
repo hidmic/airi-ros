@@ -1,8 +1,13 @@
 <launch>
-  <arg name="sim" default="true"/>
-  <arg name="debug" default="true"/>
+  <arg name="sim" default="false"/>
+  <arg name="debug" default="false"/>
 
   <include file="$(find airi_gazebo)/launch/simulation.launch" if="$(arg sim)"/>
+
+  <group unless="$(arg sim)">
+    <include file="$(find airi_base_cpp)/launch/base.launch"/>
+    <include file="$(find rplidar_ros)/launch/rplidar.launch"/>
+  </group>
 
   <include file="$(find airi_slam)/launch/slam.launch"/>
 
