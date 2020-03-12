@@ -14,6 +14,7 @@
 
 #include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Odometry.h>
+#include <std_msgs/Float64.h>
 #include <std_msgs/Int32.h>
 
 namespace airi {
@@ -52,12 +53,16 @@ DiffDriveController::DiffDriveController()
   wheel_base_ = pnh_.param("wheel_base", 0.235);
   wheel_diameter_ = pnh_.param("wheel_diameter", 0.096);
   odom_frame_id_ = pnh_.param<std::string>("odom_frame", "odom");
-  base_frame_id_ = pnh_.param<std::string>("base_frame", "base");
+  base_frame_id_ = pnh_.param<std::string>("base_frame", "base_footprint");
   publish_tf_ = pnh_.param("publish_tf", true);
 
   odom_pub_ = nh_.advertise<nav_msgs::Odometry>("odom", 10);
   left_encoder_ticks_pub_ = nh_.advertise<std_msgs::Int32>("encoders/left/ticks", 10);
   right_encoder_ticks_pub_ = nh_.advertise<std_msgs::Int32>("encoders/right/ticks", 10);
+  left_encoder_vel_pub_ = nh_.advertise<std_msgs::Float64>("encoders/left/velocity", 10);
+  right_encoder_vel_pub_ = nh_.advertise<std_msgs::Float64>("encoders/right/velocity", 10);
+  left_encoder_pos_pub_ = nh_.advertise<std_msgs::Float64>("encoders/left/position", 10);
+  right_encoder_pos_pub_ = nh_.advertise<std_msgs::Float64>("encoders/right/position", 10);
 
   unode_ = std::make_unique<::uccn::node>(get_network(interface), ros::this_node::getName());
 
@@ -106,6 +111,18 @@ void DiffDriveController::uDriveStateCallback(const airi::uccn::drive_state & st
   left_encoder_ticks_pub_.publish(ticks);
   ticks.data = state.right_encoder.ticks;
   right_encoder_ticks_pub_.publish(ticks);
+
+  std_msgs::Float64 position;
+  position.data = q16_16_to_double(state.left_encoder.position);
+  left_encoder_pos_pub_.publish(position);
+  position.data = q16_16_to_double(state.right_encoder.position);
+  right_encoder_pos_pub_.publish(position);
+
+  std_msgs::Float64 velocity;
+  velocity.data = q16_16_to_double(state.left_encoder.velocity);
+  left_encoder_vel_pub_.publish(velocity);
+  velocity.data = q16_16_to_double(state.right_encoder.velocity);
+  right_encoder_vel_pub_.publish(velocity);
 
   tf2::Quaternion estimated_quat;
   estimated_quat.setRPY(0., 0., estimated_pose_.theta);

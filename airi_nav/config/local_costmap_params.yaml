@@ -20,7 +20,7 @@ local_costmap:
   plugins:
     - {name: map_layer, type: "costmap_2d::StaticLayer"}
     - {name: scan_layer, type: "costmap_2d::ObstacleLayer"}
-    - {name: sonar_layer, type: "range_sensor_layer::RangeSensorLayer"}
+      #- {name: sonar_layer, type: "range_sensor_layer::RangeSensorLayer"}
     # - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
 
   map_layer:
@@ -31,7 +31,7 @@ local_costmap:
     use_maximum: false
 
   scan_layer:
-    observation_sources: laser_scan_sensor bumper_sensor
+    observation_sources: laser_scan_sensor # bumper_sensor
     laser_scan_sensor:
       sensor_frame: laser_optical_link
       expected_update_rate: 0.15

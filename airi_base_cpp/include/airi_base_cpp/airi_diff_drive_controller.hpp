@@ -35,6 +35,10 @@ private:
   ros::Subscriber command_sub_;
   ros::Publisher left_encoder_ticks_pub_;
   ros::Publisher right_encoder_ticks_pub_;
+  ros::Publisher left_encoder_vel_pub_;
+  ros::Publisher right_encoder_vel_pub_;
+  ros::Publisher left_encoder_pos_pub_;
+  ros::Publisher right_encoder_pos_pub_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   // uCCN interfaces

@@ -1,6 +1,13 @@
 <launch>
     <include file="$(find airi_base_cpp)/launch/base.launch"/>
 
+    <arg name="urdf_file" default="$(find airi_description)/urdf/airi.urdf.xacro"/>
+    <param name="robot_description" command="$(find xacro)/xacro '$(arg urdf_file)'"/>
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="50.0" />
+    </node>
+
     <node pkg="rplidar_ros" type="rplidarNode" name="rplidar_node" output="screen">
       <param name="serial_port"         type="string" value="/dev/ttyUSB0"/>
       <param name="serial_baudrate"     type="int"    value="115200"/>
@@ -14,6 +21,6 @@
     <node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
       <rosparam command="load" file="$(find airi_bringup)/config/laser_filters.yaml"/>
       <remap from="scan" to="scan/raw"/>
-      <remap from="scan/filtered" to="scan"/>
+      <remap from="scan_filtered" to="scan"/>
     </node>
 </launch>

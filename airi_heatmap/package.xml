@@ -11,9 +11,10 @@
   <depend>std_msgs</depend>
   <depend>rospy</depend>
   <depend>tf2_ros</depend>
+  <!---
   <depend>sqlalchemy</depend>
   <depend>os</depend>
   <depend>ast</depend>
   <depend>subprocess</depend>
-
+-->
 </package>
