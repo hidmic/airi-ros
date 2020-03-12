@@ -5,12 +5,14 @@
   <description>AIRI-heatmap development</description>
   <maintainer email="juanibattaglino@gmail.com">Juan Ignacio Battaglino</maintainer>
   <license>Apache License 2</license>
-  <author email="juanibattaglino@gmail.com">Michel Hidalgo</author>
+  <author email="juanibattaglino@gmail.com">Juan Ignacio Battaglino</author>
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>std_msgs</depend>
   <depend>rospy</depend>
   <depend>tf2_ros</depend>
+  <depend>python-sqlite</depend>
+  <depend>python3-sqlalchemy</depend>
   <!---
   <depend>sqlalchemy</depend>
   <depend>os</depend>

@@ -20,3 +20,7 @@ catkin_install_python(
   PROGRAMS scripts/airi_base_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(DIRECTORY launch config
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

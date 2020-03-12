@@ -9,4 +9,6 @@
   <include file="$(find airi_slam)/launch/slam.launch"/>
 
   <include file="$(find airi_nav)/launch/move.launch"/>
+
+  <include file="$(find airi_heatmap)/launch/heatmap.launch"/>
 </launch>
