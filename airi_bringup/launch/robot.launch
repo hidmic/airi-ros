@@ -4,14 +4,9 @@
 
   <include file="$(find airi_gazebo)/launch/simulation.launch" if="$(arg sim)"/>
 
-  <group unless="$(arg sim)">
-    <include file="$(find airi_base_cpp)/launch/base.launch"/>
-    <include file="$(find rplidar_ros)/launch/rplidar.launch"/>
-  </group>
+  <include file="$(find airi_bringup)/launch/platform.launch" unless="$(arg sim)"/>
 
   <include file="$(find airi_slam)/launch/slam.launch"/>
 
-  <include file="$(find airi_nav)/launch/explore.launch">
-    <arg name="debug" value="$(arg debug)"/>
-  </include>
+  <include file="$(find airi_nav)/launch/move.launch"/>
 </launch>

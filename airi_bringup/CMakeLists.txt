@@ -13,6 +13,6 @@ catkin_package()
 #############
 
 ## Mark other files for installation (e.g. launch files, etc.)
-install(DIRECTORY launch
+install(DIRECTORY launch config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
