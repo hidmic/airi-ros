@@ -1,7 +1,6 @@
 <launch>
-    <node name="measure_node" pkg="airi_heatmap" type="talker" />
-    <node name="db_node" pkg="airi_heatmap" type="listener" />
-        <env name="DB_PATH" value="sqlite:////Users/airi/Documents/proyectoheatmap.db" />
-    <node name="pdf_node" pkg="airi_heatmap" type="listener" />
-        <env name="DB_PATH" value="sqlite:////Users/airi/Documents/proyectoheatmap.db" />
+  <env name="DB_PATH" value="sqlite:///proyectoheatmap.db" />
+  <node name="wifi_scanner_node" pkg="airi_heatmap" type="scanner_node" />
+  <node name="wifi_recorder_node" pkg="airi_heatmap" type="recorder_node" />
+  <node name="heatmap_generator" pkg="airi_heatmap" type="pdf_generator_node" />
 </launch>

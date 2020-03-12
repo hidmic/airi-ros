@@ -1,34 +1,22 @@
 #!/usr/bin/env python
 
 import subprocess
-import rospy
-from std_msgs.msg import String
-from utils import log
+from airi_heatmap.utils import log
 
 #sudo nmcli -f SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY dev wifi rescan
 #sudo nmcli -f SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY dev wifi
 
-def ros_measure():
-    rospy.init_node('measure_node', anonymous=True)
-    pub = rospy.Publisher('measure_db', String, queue_size=10)
-    rate = rospy.Rate(10)
-    while not rospy.is_shutdown():
-        measure = get_measure('Linux')
-        #rospy.loginfo(measure)
-        pub.publish(measure)
-        rate.sleep()
-
 def get_measure(model):
     if model is 'MacOS':
-        measure = subprocess.run(['airport', '-s'], stdout=subprocess.PIPE)
+        measure = subprocess.check_output(['airport', '-s'])
     elif model is 'Raspi':
-        measure = subprocess.run(['airport', '-s'], stdout=subprocess.PIPE)
+        measure = subprocess.check_output(['airport', '-s'])
     elif model is 'Linux':
-        measure = subprocess.run(['nmcli', '-f', 'SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY', 'dev', 'wifi', 'rescan'], stdout=subprocess.PIPE)
-        measure = subprocess.run(['nmcli', '-f', 'SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY', 'dev', 'wifi'], stdout=subprocess.PIPE)
+        measure = subprocess.check_output(['nmcli', '-f', 'SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY', 'dev', 'wifi', 'rescan'])
+        measure = subprocess.check_output(['nmcli', '-f', 'SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY', 'dev', 'wifi'])
     else:
         log('heatmap','ERROR','System not recognized.')
-    return bash_to_list(measure.stdout.decode('utf-8'))
+    return bash_to_list(measure.decode('utf-8'))
 
 def bash_to_list(measure):
     measure_list = []
@@ -50,9 +38,3 @@ def bash_to_list(measure):
     # Delete headers
     del measure_list[0]
     return measure_list
-
-if __name__ == "__main__":
-    try:
-        ros_measure()
-    except rospy.ROSInterruptException as e:
-        print(e)
