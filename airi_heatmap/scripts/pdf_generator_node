@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from airi_heatmap.utils import log
 from airi_heatmap.pdf_generation import pdf_generator
 
-DB_PATH = os.environ('DB_PATH')
+DB_PATH = os.environ['DB_PATH']
 Base = declarative_base()
 
 def ros_pdf_generator():

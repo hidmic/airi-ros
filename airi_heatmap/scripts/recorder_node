@@ -14,7 +14,7 @@ from airi_heatmap.db_functions import save_measure_in_db
 from airi_heatmap.models import Base
 from airi_heatmap.utils import log
 
-DB_PATH = os.environ('DB_PATH')
+DB_PATH = os.environ['DB_PATH']
 
 def ros_save_measure():
 
