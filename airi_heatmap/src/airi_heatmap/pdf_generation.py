@@ -1,4 +1,3 @@
-import pyscreenshot as ImageGrab
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -34,7 +33,7 @@ def pdf_generator(session):
     pdf_buffer = []
     my_pdf = SimpleDocTemplate('heatmap_report.pdf')
     pdf_style_sheet = getSampleStyleSheet()
-    paragraph = Paragraph('AIRI - Reporte de medición WiFi<br /><br /><br />', pdf_style_sheet['Heading1'])
+    paragraph = Paragraph('AIRI - Reporte de medicion WiFi<br /><br /><br />', pdf_style_sheet['Heading1'])
     pdf_buffer.append(paragraph)
     paragraph = Paragraph('Proyecto Final - Heatmap<br /><br />', pdf_style_sheet['Heading2'])
     pdf_buffer.append(paragraph)

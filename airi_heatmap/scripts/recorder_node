@@ -25,7 +25,6 @@ def ros_save_measure():
     session = Session()
 
     rospy.init_node('db_node', anonymous=True)
-    rospy.init_node('tf2_point_listener', anonymous=True)
     tfBuffer = tf2_ros.Buffer()
     listener = tf2_ros.TransformListener(tfBuffer)
 
