@@ -28,8 +28,8 @@ def ros_save_measure():
     tfBuffer = tf2_ros.Buffer()
     listener = tf2_ros.TransformListener(tfBuffer)
 
-    def measure_callback (data):
-        measure_list = ast.literal_eval(data.data)
+    def measure_callback (msg):
+        measure_list = ast.literal_eval(msg.data)
         trans = tfBuffer.lookup_transform("map", "base_link", rospy.Time(0))
         point = (trans.transform.translation.x, trans.transform.translation.y)
         save_measure_in_db(session, measure_list, point)

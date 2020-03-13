@@ -12,8 +12,8 @@ def get_measure(model):
     elif model is 'Raspi':
         measure = subprocess.check_output(['airport', '-s'])
     elif model is 'Linux':
-        measure = subprocess.check_output(['nmcli', '-f', 'SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY', 'dev', 'wifi', 'rescan'])
-        measure = subprocess.check_output(['nmcli', '-f', 'SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY', 'dev', 'wifi'])
+        subprocess.check_output(['sudo', 'nmcli', '-f', 'SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY', 'dev', 'wifi', 'rescan'])
+        measure = subprocess.check_output(['sudo', 'nmcli', '-f', 'SSID,BSSID,CHAN,FREQ,RATE,SIGNAL,SECURITY', 'dev', 'wifi'])
     else:
         log('heatmap','ERROR','System not recognized.')
     return bash_to_list(measure.decode('utf-8'))
