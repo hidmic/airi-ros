@@ -11,7 +11,7 @@ from airi_heatmap.measurement import get_measure
 def ros_measure():
     rospy.init_node('measure_node', anonymous=True)
     pub = rospy.Publisher('measure_db', String, queue_size=10)
-    rate = rospy.Rate(0.06)
+    rate = rospy.Rate(0.06)  # every ~14 sec
     while not rospy.is_shutdown():
         measure = get_measure('Linux')
         #rospy.loginfo(measure)

@@ -25,7 +25,8 @@ def log(application, log_level, msg):
     print("[{}] - [{}] - {}".format(application, log_level, msg))
 
 
-def pdf_generator(session):
+def pdf_generator(session, map_):
+    plt.ioff()
     if os.path.exists('./output'):
         shutil.rmtree('./output', ignore_errors=True)
     os.makedirs('./output')
@@ -90,7 +91,7 @@ def pdf_generator(session):
             query = session.query(Rate, Measure, Ssid).join(Ssid, Ssid.id==Measure.ssid_id).filter(Ssid.ssid_value==str(ssid)).filter(Bssid.bssid_value==str(bssid)).join(Rate, Rate.id==Measure.rate_id).join(Bssid, Bssid.id==Measure.bssid_id).all()
             rate_list = remove_repeated_values(query)
             paragraph_rate = Paragraph('Transmission rate: {} Mbps<br /><br /><br /><br />'.format(rate_list), pdf_style_sheet['Heading2'])
-            
+
             pdf_buffer.append(paragraph_sec)
             pdf_buffer.append(paragraph_bssid)
             pdf_buffer.append(paragraph_channel)
@@ -101,7 +102,7 @@ def pdf_generator(session):
             #SELECT DISTINCT ssid_value, x_location, y_location, rssi FROM measure INNER JOIN ssid ON measure.ssid_id = ssid.id INNER JOIN point ON measure.point_id = point.id ORDER BY ssid_value ASC;
             query = session.query(Point.id, Point.x_location, Point.y_location, Measure, Ssid, Bssid).join(Ssid, Ssid.id==Measure.ssid_id).filter(Ssid.ssid_value==str(ssid)).filter(Bssid.bssid_value==str(bssid)).join(Point, Point.id==Measure.point_id).join(Bssid, Bssid.id==Measure.bssid_id).all()
             query.insert(0, ['id','x_position', 'y_position', 'rssi', 'ssid', 'bssid'])
-            plot_heatmap(query)
+            plot_heatmap(query, map_)
 
             plt.tight_layout()
             plt.savefig('./output/{}-{}-measure.png'.format(ssid,bssid))
@@ -127,7 +128,7 @@ def remove_repeated_values(query_list):
         my_set.union(my_set)
     return list(my_set)
 
-def plot_heatmap(query):
+def plot_heatmap(query, map_):
     query_list = []
     for elem in query:
         query_list.append(list(elem))
@@ -137,10 +138,13 @@ def plot_heatmap(query):
     outcsv.writerows(query_list)
     outfile.close()
     df1 = pd.read_csv('./output/my_csv.csv', index_col=0)
-    layout = imread('input/my_floor_diagram_resized.png')
+    layout = np.array(map_.data).reshape(map_.info.height, map_.info.width)
+    # layout = imread('input/my_floor_diagram_resized.png')
     f.suptitle("Individual AP RSSI")
     f.subplots_adjust(hspace=0.1, wspace=0.1, left=0.05, right=0.95, top=0.85,bottom=0.15)
-    rbf = Rbf(df1['x_position'], df1['y_position'], df1['rssi'], function='linear')
+    x_positions = (df1['x_position'] - map_.info.origin.position.x) / map_.info.resolution
+    y_positions = (df1['y_position'] - map_.info.origin.position.y) / map_.info.resolution
+    rbf = Rbf(x_positions, y_positions, df1['rssi'], function='linear')
     num_x = int(IMAGE_WIDTH / 4)
     num_y = int(num_x / (IMAGE_WIDTH / IMAGE_HEIGHT))
     x = np.linspace(0, GRID_WIDTH, num_x)
@@ -150,6 +154,6 @@ def plot_heatmap(query):
     z = rbf(gx, gy)
     z = z.reshape((num_y, num_x))
     image = plt.imshow(z, vmin=0, vmax=100, extent=(0,
-            IMAGE_WIDTH, IMAGE_HEIGHT, 0), cmap='RdYlBu_r', alpha=1)
+            IMAGE_WIDTH, IMAGE_HEIGHT, 0), origin='lower', cmap='RdYlBu_r', alpha=1)
     plt.colorbar(image)
-    plt.imshow(layout, interpolation='bicubic', zorder=100)
+    plt.imshow(layout, interpolation='bicubic', origin='lower', zorder=100)

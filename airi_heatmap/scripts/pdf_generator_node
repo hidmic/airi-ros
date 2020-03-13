@@ -2,7 +2,8 @@
 
 import os
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import Empty
+from nav_msgs.msg import OccupancyGrid
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -13,22 +14,37 @@ from airi_heatmap.pdf_generation import pdf_generator
 DB_PATH = os.environ['DB_PATH']
 Base = declarative_base()
 
-def ros_pdf_generator():
-    rospy.init_node('pdf_node', anonymous=True)
+class PDFGeneratorNode:
 
-    #Change echo to True to troubleshoot
-    engine = create_engine(DB_PATH, echo=False)
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    def __init__(self, name='pdf_node'):
+        rospy.init_node(name, anonymous=True)
 
-    def pdf_generator_callback(data):
-        pdf_generator(session)
+        # Change echo to True to troubleshoot
+        self._engine = create_engine(DB_PATH, echo=False)
+        self._session = sessionmaker(bind=engine)()
+        self._current_map = None
 
-    rospy.Subscriber('pdf_gen', String, pdf_generator_callback)
-    rospy.spin()
+        rospy.Subscriber('map', OccupancyGrid, self._map_callback)
+        rospy.Subscriber('pdf_gen', Empty, self._gen_callback)
+
+    def _map_callback(msg):
+        self._current_map = msg
+
+    def _gen_callback(msg):
+        self.generate()
+
+    def generate(self):
+        if not self._current_map:
+            rospy.logerr('No map, cannot generate!')
+            return
+        pdf_generator(self._session, self._current_map)
+
+    def spin(self):
+        rospy.spin()
 
 if __name__ == "__main__":
+    node = PDFGeneratorNode()
     try:
-        ros_pdf_generator()
+        node.spin()
     except rospy.ROSInterruptException as e:
         print(e)
