@@ -5,25 +5,22 @@ cmake_policy(SET CMP0054 NEW)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
-  gazebo_dev
-  gazebo_plugins
-  pcl_ros
-  pcl_conversions
-  roslaunch
-  rviz
-  sensor_msgs
-  xacro
+  roscpp
+  rospy
+  std_msgs
+  message_generation
 )
 
-catkin_package()
+add_message_files(
+  FILES
+  Bumper.msg
+)
 
-catkin_python_setup()
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
-#############
-## Install ##
-#############
-
-catkin_install_python(
-  PROGRAMS scripts/airi_base_node
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+catkin_package(
+  CATKIN_DEPENDS message_runtime
 )
